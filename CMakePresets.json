@@ -1,0 +1,68 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "windows-default",
+            "hidden": true,
+            "generator": "Visual Studio 17 2022",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "windows-arnold-7.3.4",
+            "inherits": "windows-default",
+            "binaryDir": "${sourceDir}/build/arnold-7.3.4",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceParentDir}/../plugins/ooKuwaharaArnoldImager/Arnold-7.3.4"
+            },
+            "environment": {
+                "Arnold_ROOT": "$env{SDKS_ROOT}/Arnold/7.3.4.1"
+            }
+        },
+        {
+            "name": "windows-arnold-7.3.5",
+            "inherits": "windows-default",
+            "binaryDir": "${sourceDir}/build/arnold-7.3.5",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceParentDir}/../plugins/ooKuwaharaArnoldImager/Arnold-7.3.5"
+            },
+            "environment": {
+                "Arnold_ROOT": "$env{SDKS_ROOT}/Arnold/7.3.5.0"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "windows-arnold-7.3.4-debug",
+            "configurePreset": "windows-arnold-7.3.4",
+            "configuration": "Debug"
+        },
+        {
+            "name": "windows-arnold-7.3.4-release",
+            "configurePreset": "windows-arnold-7.3.4",
+            "configuration": "Release"
+        },
+        {
+            "name": "windows-arnold-7.3.5-debug",
+            "configurePreset": "windows-arnold-7.3.5",
+            "configuration": "Debug"
+        },
+        {
+            "name": "windows-arnold-7.3.5-release",
+            "configurePreset": "windows-arnold-7.3.5",
+            "configuration": "Release"
+        }
+    ]
+}
