@@ -1,11 +1,11 @@
 #ifndef KUWAHARAARNOLD_KUWAHARA_H_
 #define KUWAHARAARNOLD_KUWAHARA_H_
 
+#include <array>
+
 #include <ai.h>
 
 #include "grid.h"
-
-#include <iostream>
 
 namespace kuwahara_arnold
 {
@@ -17,6 +17,13 @@ namespace kuwahara_arnold
         kTopRight,
         kBottomLeft,
         kBottomRight
+    };
+
+    constexpr std::array<kuwahara_arnold::Quadrant, 4> quadrants = {
+        kuwahara_arnold::Quadrant::kTopLeft,
+        kuwahara_arnold::Quadrant::kTopRight,
+        kuwahara_arnold::Quadrant::kBottomLeft,
+        kuwahara_arnold::Quadrant::kBottomRight
     };
 
     GridRegion ComputeQuadrantRegion(const GridPoint& center, const GridSize& grid, int radius, Quadrant quadrant)

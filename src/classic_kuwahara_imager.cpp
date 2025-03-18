@@ -1,11 +1,11 @@
-#include <ai.h>
 #include <vector>
-#include <algorithm>
+
+#include <ai.h>
 
 #include "kuwahara_arnold.h"
 
 
-AI_IMAGER_NODE_EXPORT_METHODS(KuwaharaImagerMtd);
+AI_IMAGER_NODE_EXPORT_METHODS(ClassicKuwaharaImagerMtd);
 
 node_parameters
 {
@@ -82,40 +82,17 @@ imager_evaluate
                 AtRGBA  mean_color      = AI_RGBA_ZERO;
                 float   variance        = 0.0f;
 
-                // Compute Top-Left region (A)
-                grid::GridRegion region_top_left = kuwahara_arnold::ComputeQuadrantRegion(center, grid, radius, kuwahara_arnold::Quadrant::kTopLeft);
-                kuwahara_arnold::ComputeRegion(rgba, grid, region_top_left, mean_color, variance);
-                if (variance < best_variance)
+                // Iterate over the 4 quadrants
+                for (auto quadrant : kuwahara_arnold::quadrants)
                 {
-                    best_variance = variance;
-                    best_color = mean_color;
-                }
+                    grid::GridRegion quadrant_region = kuwahara_arnold::ComputeQuadrantRegion(center, grid, radius, quadrant);
+                    kuwahara_arnold::ComputeRegion(rgba, grid, quadrant_region, mean_color, variance);
 
-                // Compute Top-Right region (B)
-                grid::GridRegion region_top_right = kuwahara_arnold::ComputeQuadrantRegion(center, grid, radius, kuwahara_arnold::Quadrant::kTopRight);
-                kuwahara_arnold::ComputeRegion(rgba, grid, region_top_right, mean_color, variance);
-                if (variance < best_variance)
-                {
-                    best_variance = variance;
-                    best_color = mean_color;
-                }
-
-                // Compute Bottom-Left region (C)
-                grid::GridRegion region_bottom_left = kuwahara_arnold::ComputeQuadrantRegion(center, grid, radius, kuwahara_arnold::Quadrant::kBottomLeft);
-                kuwahara_arnold::ComputeRegion(rgba, grid, region_bottom_left, mean_color, variance);
-                if (variance < best_variance)
-                {
-                    best_variance = variance;
-                    best_color = mean_color;
-                }
-
-                // Compute Bottom-Right region (D)
-                grid::GridRegion region_bottom_right = kuwahara_arnold::ComputeQuadrantRegion(center, grid, radius, kuwahara_arnold::Quadrant::kBottomRight);
-                kuwahara_arnold::ComputeRegion(rgba, grid, region_bottom_right, mean_color, variance);
-                if (variance < best_variance)
-                {
-                    best_variance = variance;
-                    best_color = mean_color;
+                    if (variance < best_variance)
+                    {
+                        best_variance = variance;
+                        best_color = mean_color;
+                    }
                 }
 
                 // Store pixel data for each index
