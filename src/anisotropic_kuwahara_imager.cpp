@@ -3,22 +3,11 @@
 #include <ai.h>
 
 #include "kuwahara_arnold.hpp"
+#include "structure_tensor.hpp"
 
 
-AI_IMAGER_NODE_EXPORT_METHODS(ClassicKuwaharaImagerMtd);
+AI_IMAGER_NODE_EXPORT_METHODS(AnisotropicKuwaharaImagerMtd);
 
-node_parameters
-{
-    AiParameterInt("radius", 5);
-}
-
-node_initialize
-{
-}
-
-node_update
-{
-}
 
 namespace
 {
@@ -43,6 +32,19 @@ struct AOVData
     AOVData(const void* bucket_data, int type) : bucket_data(bucket_data), type(type) {}
 };
 
+node_parameters
+{
+    AiParameterInt("radius", 5);
+}
+
+node_initialize
+{
+}
+
+node_update
+{
+}
+
 imager_prepare
 {
     // Set the imager schedule type to full frame always as we need access to all neighbouring pixels
@@ -66,6 +68,9 @@ imager_evaluate
     {
         auto aov_data = AOVData(bucket_data, aov_type);
         AtRGBA* rgba = (AtRGBA*)bucket_data;
+
+        // cv::Mat structure_tensor = structure_tensor::computeStructureTensor(rgba, bucket_size_x, bucket_size_y, 3, 1.0);
+        // Mat mat(bucket_size_y, bucket_size_x, CV_32FC3);
 
         // Pour chaque pixel du bucket
         for (int y = 0; y < bucket_size_y; ++y)

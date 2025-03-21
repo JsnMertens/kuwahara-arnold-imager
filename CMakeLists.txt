@@ -6,6 +6,10 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include(GNUInstallDirs)
 
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 # Force 64-bit builds on Windows
 if (WIN32 AND NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
     message(FATAL_ERROR "Only 64-bit builds are supported on Windows.")
@@ -31,6 +35,7 @@ file(GLOB HEADERS CONFIGURE_DEPENDS "include/*.hpp" "include/*.h")
 # Find dependencies
 # ================================================
 find_package(Arnold REQUIRED)
+find_package(OpenCV REQUIRED)
 
 # ================================================
 # Create shared library target
@@ -42,11 +47,18 @@ add_library(${PROJECT_NAME} SHARED
 target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${OpenCV_INCLUDE_DIRS}
 )
-
+    
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         Arnold::Arnold
+        ${OpenCV_LIBS}
+)
+
+target_compile_definitions(${PROJECT_NAME}
+    PRIVATE
+        OPENCV_STATIC
 )
 
 # ================================================
