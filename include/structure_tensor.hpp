@@ -10,7 +10,7 @@
 namespace
 {
 
-void BuildLuminanceImage(const AtRGBA* rgba, const int bucket_size_x, const int bucket_size_y, cv::Mat& img)
+void buildLuminanceImage(const AtRGBA* rgba, const int bucket_size_x, const int bucket_size_y, cv::Mat& img)
 {
     #pragma omp parallel for
     for (int y = 0; y < bucket_size_y; ++y)
@@ -38,11 +38,11 @@ namespace structure_tensor
 using namespace grid;
 
 inline
-cv::Mat ComputeStructureTensor(const AtRGBA* rgba, GridSize &grid, int kernelsize = 3, double sigma = 1.0)
+cv::Mat computeStructureTensor(const AtRGBA* rgba, GridSize &grid, int kernelsize = 3, double sigma = 1.0)
 {
     // Build luminance image
     cv::Mat img(grid.y, grid.x, CV_32F);
-    BuildLuminanceImage(rgba, grid.x, grid.y, img);
+    buildLuminanceImage(rgba, grid.x, grid.y, img);
 
     // Compute gradients
     cv::Mat grad_x, grad_y;
@@ -68,7 +68,7 @@ cv::Mat ComputeStructureTensor(const AtRGBA* rgba, GridSize &grid, int kernelsiz
 }
 
 inline
-std::pair<float, float> ComputeLocalOrientationAndAnisotropyAtPoint(const cv::Mat &structuretensor, const int x, const int y)
+std::pair<float, float> computeLocalOrientationAndAnisotropyAtPoint(const cv::Mat &structuretensor, const int x, const int y)
 {
     // Retrieve the structure tensor values at the given pixel
     const cv::Vec3f &T = structuretensor.at<cv::Vec3f>(y, x);
@@ -77,7 +77,7 @@ std::pair<float, float> ComputeLocalOrientationAndAnisotropyAtPoint(const cv::Ma
     const float &Jyy = T[2];
 
     // Build the 2x2 matrix
-    cv::Matx22f T_mat(Jxx, Jxy, Jxy, Jyy);
+    const cv::Matx22f T_mat(Jxx, Jxy, Jxy, Jyy);
 
     // Compute eigenvalues and eigenvectors
     cv::Mat eigenvalues, eigenvectors;
@@ -88,7 +88,6 @@ std::pair<float, float> ComputeLocalOrientationAndAnisotropyAtPoint(const cv::Ma
 
     // Compute anisotropy : A = (lambda1 - lambda2) / (lambda1 + lambda2)
     float anisotropy = ((lambda1 + lambda2) > AI_EPSILON) ? (lambda1 - lambda2) / (lambda1 + lambda2) : 0;
-    // float eccentricity = (lambda1 > 0) ? AiSqr(1 - (lambda2 / lambda1) * (lambda2 / lambda1)) : 0;  // Useful or not?
 
     // Compute local orientation, use the eigenvector associated with the smallest value (row 1)
     const cv::Vec2f &minor_eigenvector = eigenvectors.at<cv::Vec2f>(1);

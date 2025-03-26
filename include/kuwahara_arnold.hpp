@@ -105,7 +105,7 @@ void ComputeRegion(AtRGBA* color, GridSize grid, const GridRegion& region, AtRGB
             sum_var += (dr * dr + dg * dg + db * db);
         }
     }
-    variance = sum_var / count;
+    variance = sum_var / count; 
 }
 
 } // namespace kuwahara_arnold
@@ -113,6 +113,20 @@ void ComputeRegion(AtRGBA* color, GridSize grid, const GridRegion& region, AtRGB
 namespace anisotropic_kuwahara_arnold
 {
 
+inline
+std::pair<float, float> computePolynomialEllipticalKernelShape (
+    const float anisotropy,
+    const float radius,
+    const float ellipse_min_radius = 1.0f  // alpha
+) {
+    float ellipse_major_radius = ((ellipse_min_radius + anisotropy) / ellipse_min_radius) * radius;  // a
+    ellipse_major_radius = AiMax(radius, AiMin(ellipse_major_radius, 2.f * radius));  // r <= a <= 2r
+
+    float ellipse_minor_radius = (ellipse_min_radius / (ellipse_min_radius + anisotropy)) * radius;  // b
+    ellipse_minor_radius = AiMax(radius * .5f, AiMin(ellipse_minor_radius, radius));  // r/2 <= b <= r
+
+    return std::make_pair(ellipse_major_radius, ellipse_minor_radius);    
+}
 
 
 } // namespace anisotropic_kuwahara_arnold

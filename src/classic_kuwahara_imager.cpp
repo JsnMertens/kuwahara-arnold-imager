@@ -54,8 +54,10 @@ imager_evaluate
     // Node Parameters
     const int radius = AiNodeGetInt(node, radius_str);
 
-    std::vector<AOVData> aovs;
     grid::GridSize       grid(bucket_size_x, bucket_size_y);
+
+    const int num_pixels = bucket_size_x * bucket_size_y;
+    std::vector<AtRGBA> data(num_pixels, {AI_RGB_BLACK, 1.0f});
 
     // Init vars for Iterator
     int         aov_type = 0;
@@ -67,12 +69,14 @@ imager_evaluate
         auto aov_data = AOVData(bucket_data, aov_type);
         AtRGBA* rgba = (AtRGBA*)bucket_data;
 
-        // Pour chaque pixel du bucket
+        #pragma omp parallel for
         for (int y = 0; y < bucket_size_y; ++y)
         {
+            const int base_idx = y * bucket_size_x;
+
             for (int x = 0; x < bucket_size_x; ++x)
             {
-                int idx = y * bucket_size_x + x;
+                const int idx = base_idx + x;
 
                 grid::GridPoint  center(x, y);
 
@@ -94,21 +98,22 @@ imager_evaluate
                         best_color = mean_color;
                     }
                 }
-
-                // Store pixel data for each index
-                aov_data.pixels_data.push_back(PixelData(idx, best_color));
+                
+                data[idx] = best_color;
             }
         }
-        aovs.push_back(aov_data);
-    }
 
-    // Set the output color for each AOV
-    for (const auto &aov : aovs)
-    {
-        AtRGBA* output_color = (AtRGBA*)aov.bucket_data;
-        for (const auto pixel_data : aov.pixels_data)
+        #pragma omp parallel for
+        for (int y = 0; y < bucket_size_y; ++y)
         {
-            output_color[pixel_data.idx] = pixel_data.color;
+            const int base_idx = y * bucket_size_x;
+
+            for (int x = 0; x < bucket_size_x; ++x)
+            {
+                const int idx = base_idx + x;
+                rgba[idx] = data[idx];
+
+            }
         }
     }
 }
