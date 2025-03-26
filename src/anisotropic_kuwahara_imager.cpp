@@ -291,7 +291,8 @@ imager_evaluate
 
 
                 // data[idx] = color_total / 8.0f;
-                data[idx] = color_total / alpha_total;
+                AtRGBA final_color = color_total / alpha_total;
+                data[idx] = (1.0f - 2.0f) + final_color * 2.0f;
                 // data[idx].a = 1.0f;
 
             }
