@@ -1,8 +1,11 @@
 #ifndef KUWAHARA_ARNOLD_GRID_H_
 #define KUWAHARA_ARNOLD_GRID_H_
 
+#include <opencv2/opencv.hpp>
+
 namespace grid
 {
+    
 struct GridPoint
 {
     int x;

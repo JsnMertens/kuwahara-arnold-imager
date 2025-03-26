@@ -4,6 +4,7 @@
 #include <array>
 
 #include <ai.h>
+#include <opencv2/opencv.hpp>
 
 #include "grid.hpp"
 
@@ -28,7 +29,8 @@ constexpr std::array<kuwahara_arnold::Quadrant, 4> quadrants = {
     kuwahara_arnold::Quadrant::kBottomRight
 };
 
-inline GridRegion ComputeQuadrantRegion(const GridPoint& center, const GridSize& grid, int radius, Quadrant quadrant)
+inline
+GridRegion ComputeQuadrantRegion(const GridPoint& center, const GridSize& grid, int radius, Quadrant quadrant)
 {
     GridRegion region;
 
@@ -66,7 +68,8 @@ inline GridRegion ComputeQuadrantRegion(const GridPoint& center, const GridSize&
     return region;
 }
 
-inline void ComputeRegion(AtRGBA* color, GridSize grid, const GridRegion& region, AtRGBA& mean, float& variance)
+inline
+void ComputeRegion(AtRGBA* color, GridSize grid, const GridRegion& region, AtRGBA& mean, float& variance)
 {
     int count = 0;
     mean = AI_RGBA_ZERO;
@@ -92,9 +95,9 @@ inline void ComputeRegion(AtRGBA* color, GridSize grid, const GridRegion& region
     float sum_var = 0.0f;
     for (int y = region.min.y; y < region.max.y; ++y)
     {
-        for (int xx = region.min.x; xx < region.max.x; ++xx)
+        for (int x = region.min.x; x < region.max.x; ++x)
         {
-            int idx = y * grid.x + xx;
+            int idx = y * grid.x + x;
             float dr = color[idx].r - mean.r;
             float dg = color[idx].g - mean.g;
             float db = color[idx].b - mean.b;
@@ -105,5 +108,12 @@ inline void ComputeRegion(AtRGBA* color, GridSize grid, const GridRegion& region
 }
 
 } // namespace kuwahara_arnold
+
+namespace anisotropic_kuwahara_arnold
+{
+
+
+
+} // namespace anisotropic_kuwahara_arnold
 
 #endif // KUWAHARA_ARNOLD_KUWAHARA_H_
