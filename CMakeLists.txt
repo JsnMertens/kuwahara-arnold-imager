@@ -24,7 +24,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)  # Don't work with MSVC
 
 if(MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    # add_compile_options(/W4)  # Warning level 4
+    add_compile_options(/W4)  # Warning level 4
 else()
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()

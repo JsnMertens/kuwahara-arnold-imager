@@ -21,15 +21,15 @@ float sectorWeight(
     // Coordonnées polaires
     float r = std::sqrt(u*u + v*v);
     float angle = std::atan2(v, u);
-    if (angle < 0) angle += 2.0f * CV_PI;
+    if (angle < 0) angle += (2.0f * AI_PI);
 
     // Centre du secteur i
-    float sectorCenter = (i + 0.5f) * (2.0f * CV_PI / N);
+    float sectorCenter = (i + 0.5f) * (2.0f * AI_PI / N);
 
     // Différence angulaire (on s'assure qu'elle est dans [0, π])
     float dphi = std::fabs(angle - sectorCenter);
-    if (dphi > CV_PI)
-        dphi = 2.0f * CV_PI - dphi;
+    if (dphi > AI_PI)
+        dphi = 2.0f * AI_PI - dphi;
 
     // Gaussienne angulaire
     float angularWeight = std::exp(- (dphi * dphi) / (2.0f * sigmaAngle * sigmaAngle));
@@ -122,9 +122,9 @@ imager_evaluate
     std::vector<float> sumIntensitySq(N, 0.0f);  // somme de (intensité^2)*w_i
 
 
-    // const int y = 249;
-    // const int x = 249;
-    // const int base_idx = y * bucket_size_x;
+    const int y = 249;
+    const int x = 249;
+    const int base_idx = y * bucket_size_x;
 
     while (AiOutputIteratorGetNext(iterator, &output_name, &aov_type, &bucket_data))
     {
@@ -133,13 +133,13 @@ imager_evaluate
 
         const cv::Mat structureTensor = structure_tensor::ComputeStructureTensor(rgba, grid, 3, 1.0);
 
-        // Iterate over the bucket
-        for (int y = 0; y < bucket_size_y; ++y)
-        {
-            const int base_idx = y * bucket_size_x;
+        // // Iterate over the bucket
+        // for (int y = 0; y < bucket_size_y; ++y)
+        // {
+        //     const int base_idx = y * bucket_size_x;
 
-            for (int x = 0; x < bucket_size_x; ++x)
-            {
+        //     for (int x = 0; x < bucket_size_x; ++x)
+        //     {
                 // Index of the pixel in the bucket
                 const int idx = base_idx + x;
 
@@ -194,6 +194,8 @@ imager_evaluate
                         const bool is_inside = (u * u + v * v) <= 1.0f;
                         if (!is_inside)
                             continue;
+                        
+                        data[patch_idx] = AI_RGBA_GREEN;
 
                         for (int i = 0; i < sectors_num; ++i)
                         {
@@ -331,8 +333,8 @@ imager_evaluate
 
 
 
-            }
-        }
+        //     }
+        // }
 
 
     //     // aovs.push_back(aov_data);

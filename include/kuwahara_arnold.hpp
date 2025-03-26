@@ -90,7 +90,8 @@ void ComputeRegion(AtRGBA* color, GridSize grid, const GridRegion& region, AtRGB
         variance = AI_BIG;
         return;
     }
-    mean /= count;
+    float inv_countf = 1.0f / static_cast<float>(count);
+    mean *= inv_countf;
 
     float sum_var = 0.0f;
     for (int y = region.min.y; y < region.max.y; ++y)

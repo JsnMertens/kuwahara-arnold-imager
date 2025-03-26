@@ -88,7 +88,7 @@ std::pair<float, float> ComputeLocalOrientationAndAnisotropyAtPoint(const cv::Ma
 
     // Compute anisotropy : A = (lambda1 - lambda2) / (lambda1 + lambda2)
     float anisotropy = ((lambda1 + lambda2) > AI_EPSILON) ? (lambda1 - lambda2) / (lambda1 + lambda2) : 0;
-    float eccentricity = (lambda1 > 0) ? AiSqr(1 - (lambda2 / lambda1) * (lambda2 / lambda1)) : 0;  // Useful or not?
+    // float eccentricity = (lambda1 > 0) ? AiSqr(1 - (lambda2 / lambda1) * (lambda2 / lambda1)) : 0;  // Useful or not?
 
     // Compute local orientation, use the eigenvector associated with the smallest value (row 1)
     const cv::Vec2f &minor_eigenvector = eigenvectors.at<cv::Vec2f>(1);
