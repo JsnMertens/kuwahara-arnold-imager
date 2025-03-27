@@ -3,7 +3,7 @@
 #include <ai.h>
 #include <omp.h>
 
-#include "kuwahara_arnold.hpp"
+#include "kuwahara.hpp"
 #include "structure_tensor.hpp"
 
 #pragma warning(disable: 4100)
@@ -21,7 +21,7 @@ inline float polynomialBase(float u, float v, float eta = 0.4f)
 inline float polynomialSector(float u, float v, int sectorIndex, int totalSectors, float eta = 0.4f)
 {
     // angle = -2πi / N
-    float angle = -AI_PITIMES2 * static_cast<float>(sectorIndex) / static_cast<float>(totalSectors);
+    float angle = AI_PITIMES2 * static_cast<float>(sectorIndex) / static_cast<float>(totalSectors);
     float cosA = std::cos(angle);
     float sinA = std::sin(angle);
 
@@ -36,35 +36,6 @@ inline float polynomialSector(float u, float v, int sectorIndex, int totalSector
 
 
 
-// float sectorWeight(
-//     int i,            // index du secteur (0..N-1)
-//     float u, float v, // coordonnées dans le disque unité
-//     int N,            // nombre de secteurs
-//     float sigmaAngle, // écart-type pour le lissage angulaire
-//     float sigmaRad    // écart-type pour la décroissance radiale
-// )
-// {
-//     // Coordonnées polaires
-//     float r = std::sqrt(u*u + v*v);
-//     float angle = std::atan2(v, u);
-//     if (angle < 0) angle += (2.0f * AI_PI);
-
-//     // Centre du secteur i
-//     float sectorCenter = (i + 0.5f) * (2.0f * AI_PI / N);
-
-//     // Différence angulaire (on s'assure qu'elle est dans [0, π])
-//     float dphi = std::fabs(angle - sectorCenter);
-//     if (dphi > AI_PI)
-//         dphi = 2.0f * AI_PI - dphi;
-
-//     // Gaussienne angulaire
-//     float angularWeight = std::exp(- (dphi * dphi) / (2.0f * sigmaAngle * sigmaAngle));
-
-//     // Gaussienne radiale
-//     float radialWeight = std::exp(- (r * r) / (2.0f * sigmaRad * sigmaRad));
-
-//     return angularWeight * radialWeight;
-// }
 
 
 
@@ -121,7 +92,7 @@ imager_evaluate
 
     const float radiusf = static_cast<float>(radius);
 
-    const float ellipse_min_radius = AiMax(1.0f, AI_EPSILON);
+    const float ellipse_min_radius = AiMax(.5f, AI_EPSILON);
     const int sectors_num = 8;  // N
     const float sectors_numf = static_cast<float>(sectors_num);
     
@@ -135,17 +106,11 @@ imager_evaluate
     const void *bucket_data;
     AtString output_name;
 
-    // const int y = 400;
-    // const int x = 400;
-    // const int base_idx = y * bucket_size_x;
-
-    
     while (AiOutputIteratorGetNext(iterator, &output_name, &aov_type, &bucket_data))
     {
-        auto aov_data = AOVData(bucket_data, aov_type);
         AtRGBA* rgba = (AtRGBA*)bucket_data;
 
-        const cv::Mat structureTensor = structure_tensor::computeStructureTensor(rgba, grid, 3, 1.0);
+        const cv::Mat structureTensor = structure_tensor::computeStructureTensor(rgba, grid, 3, 1.0f);
 
         // Iterate over the bucket
         #pragma omp parallel for
@@ -155,6 +120,7 @@ imager_evaluate
 
             for (int x = 0; x < bucket_size_x; ++x)
             {
+
                 // Index of the pixel in the bucket
                 const int idx = base_idx + x;
 
@@ -182,7 +148,6 @@ imager_evaluate
 
                 // Compute the inverse affine matrix
                 cv::Matx22f affine_mat = scale_mat * rot_mat ;  // M = S * R
-                cv::Matx22f inv_affine_mat = affine_mat.inv();  // M^-1
             
                 // Compute the bounding box of the ellipse
                 const float half_width = 
@@ -194,17 +159,15 @@ imager_evaluate
                     std::abs(ellipse_minor_radius * orientation_cos));
 
                 // Définir le patch en fonction de la boîte englobante
-                const int patch_min_x = AiMax(x - static_cast<int>(half_width), 0);
-                const int patch_max_x = AiMin(x + static_cast<int>(half_width), bucket_size_x);
+                const int patch_min_x = AiMax(x - static_cast<int>(half_width),  0);
+                const int patch_max_x = AiMin(x + static_cast<int>(half_width),  bucket_size_x);
                 const int patch_min_y = AiMax(y - static_cast<int>(half_height), 0);
                 const int patch_max_y = AiMin(y + static_cast<int>(half_height), bucket_size_y);
 
-
-                std::array<float, 8>    sumWeight       = {}; sumWeight.fill(0.0f);
-                std::array<AtRGBA, 8>   sumColor        = {}; sumColor.fill(AI_RGB_BLACK);
-                std::array<float, 8>    sumIntensity    = {}; sumIntensity.fill(0.0f);
-                std::array<float, 8>    sumIntensitySq  = {}; sumIntensitySq.fill(0.0f);
-
+                std::array<float,  sectors_num> sum_weights           = {}; sum_weights.fill(0.0f);
+                std::array<AtRGBA, sectors_num> sum_colors            = {}; sum_colors.fill(AI_RGB_BLACK);
+                std::array<float,  sectors_num> sum_intensity         = {}; sum_intensity.fill(0.0f);
+                std::array<float,  sectors_num> sum_intensity_squared = {}; sum_intensity_squared.fill(0.0f);
 
                 // Iterate over the pixels in the patch
                 for (int py = patch_min_y; py < patch_max_y; ++py)
@@ -224,44 +187,42 @@ imager_evaluate
                         const float &u = disc_point.x;
                         const float &v = disc_point.y;
                         
+                        // Check if the point is inside the ellipse
                         const bool is_inside = (u*u + v*v) <= 1.0f;
                         if (!is_inside)
                             continue;
 
-                        // Calculer la couleur (R, G, B) et intensité
+                        // Get the pixel color and intensity
                         const AtRGBA& pixel_color = rgba[patch_idx];
                         const float I = (0.2126f * pixel_color.r) + (0.7152f * pixel_color.g) + (0.0722f * pixel_color.b);
 
-                        // Calcul des poids polynomiaux pour chaque secteur
-                        std::vector<float> sectorWeights(sectors_num, 0.0f);
-                        float sumW = 0.0f;
-                        float eta = 0.4f; // paramètre ajustable
-
-                        for (int i = 0; i < sectors_num; ++i)
-                        {
-                            float w_i = polynomialSector(u, v, i, sectors_num, eta);
-                            sectorWeights[i] = w_i;
-                            sumW += w_i;
-                        }
-
-                        if (sumW <= AI_EPSILON)
-                            continue;
-          
-                        for (int i = 0; i < sectors_num; ++i)
-                        {
-                            sectorWeights[i] /= sumW;
-
-                            // Accumuler pour chaque secteur
-                            sumWeight[i]     += sectorWeights[i];
-                            sumColor[i]      += pixel_color * sectorWeights[i];
-                            sumIntensity[i]  += I * sectorWeights[i];
-                            sumIntensitySq[i]+= (I*I) * sectorWeights[i];
-                        }
+                        // Compute the sector weights
+                        std::array<float, sectors_num> sector_weights = {}; sector_weights.fill(0.0f);
+                        float sum_weight = 0.0f;
                         
+                        for (int i = 0; i < sectors_num; ++i)
+                        {
+                            float weight = anisotropic_kuwahara::computeSectorWeight(i, u, v, .4f, .4f, sectors_num);
+
+                            sector_weights[i] = weight;
+                            sum_weight += weight;
+                        }
+
+                        if (sum_weight <= AI_EPSILON)
+                            continue;
+
+                        for (int i = 0; i < sectors_num; ++i)
+                        {
+                            sector_weights[i] /= sum_weight;  // Normalize
+
+                            sum_weights[i]    += sector_weights[i];
+                            sum_colors[i]     += pixel_color * sector_weights[i];
+                            sum_intensity[i]   += I * sector_weights[i];
+                            sum_intensity_squared[i] += (I*I) * sector_weights[i];
+                        }
                     }
                 }
 
-                // 2B) Après le patch, on calcule la couleur finale
                 AtRGBA color_total = AI_RGB_BLACK;
                 float alpha_total = 0.0f;
 
@@ -270,12 +231,12 @@ imager_evaluate
 
                 for (int i = 0; i < sectors_num; ++i)
                 {
-                    if (sumWeight[i] <= AI_EPSILON) 
+                    if (sum_weights[i] <= AI_EPSILON) 
                         continue;
 
-                    AtRGBA meanColor_i = sumColor[i] / sumWeight[i];
-                    float meanI = sumIntensity[i] / sumWeight[i];
-                    float meanI2= sumIntensitySq[i] / sumWeight[i];
+                    AtRGBA meanColor_i = sum_colors[i] / sum_weights[i];
+                    float meanI = sum_intensity[i] / sum_weights[i];
+                    float meanI2= sum_intensity_squared[i] / sum_weights[i];
                     float var_i = meanI2 - meanI*meanI;
 
                     float alpha_i = 1.0f / (1.0f + k * std::pow(var_i, (float)q));
@@ -283,18 +244,8 @@ imager_evaluate
                     alpha_total += alpha_i;
                 }
 
-                // cv::Vec3f finalColor(0,0,0);
-                // if (alpha_total > AI_EPSILON)
-                //     finalColor = color_total / alpha_total;
-
-                
-
-
-                // data[idx] = color_total / 8.0f;
                 AtRGBA final_color = color_total / alpha_total;
-                data[idx] = (1.0f - 2.0f) + final_color * 2.0f;
-                // data[idx].a = 1.0f;
-
+                data[idx] = final_color;
             }
         }
 

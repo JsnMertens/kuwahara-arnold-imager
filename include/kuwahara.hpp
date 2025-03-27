@@ -9,7 +9,7 @@
 #include "grid.hpp"
 
 
-namespace kuwahara_arnold
+namespace kuwahara
 {
     
 using namespace grid;
@@ -22,15 +22,15 @@ enum class Quadrant
     kBottomRight
 };
 
-constexpr std::array<kuwahara_arnold::Quadrant, 4> quadrants = {
-    kuwahara_arnold::Quadrant::kTopLeft,
-    kuwahara_arnold::Quadrant::kTopRight,
-    kuwahara_arnold::Quadrant::kBottomLeft,
-    kuwahara_arnold::Quadrant::kBottomRight
+constexpr std::array<Quadrant, 4> quadrants = {
+    Quadrant::kTopLeft,
+    Quadrant::kTopRight,
+    Quadrant::kBottomLeft,
+    Quadrant::kBottomRight
 };
 
 inline
-GridRegion ComputeQuadrantRegion(const GridPoint& center, const GridSize& grid, int radius, Quadrant quadrant)
+GridRegion computeQuadrantRegion(const GridPoint& center, const GridSize& grid, int radius, Quadrant quadrant)
 {
     GridRegion region;
 
@@ -69,7 +69,7 @@ GridRegion ComputeQuadrantRegion(const GridPoint& center, const GridSize& grid, 
 }
 
 inline
-void ComputeRegion(AtRGBA* color, GridSize grid, const GridRegion& region, AtRGBA& mean, float& variance)
+void computeRegion(AtRGBA* color, GridSize grid, const GridRegion& region, AtRGBA& mean, float& variance)
 {
     int count = 0;
     mean = AI_RGBA_ZERO;
@@ -108,9 +108,9 @@ void ComputeRegion(AtRGBA* color, GridSize grid, const GridRegion& region, AtRGB
     variance = sum_var / count; 
 }
 
-} // namespace kuwahara_arnold
+} // namespace kuwahara
 
-namespace anisotropic_kuwahara_arnold
+namespace anisotropic_kuwahara
 {
 
 inline
@@ -118,7 +118,8 @@ std::pair<float, float> computePolynomialEllipticalKernelShape (
     const float anisotropy,
     const float radius,
     const float ellipse_min_radius = 1.0f  // alpha
-) {
+)
+{
     float ellipse_major_radius = ((ellipse_min_radius + anisotropy) / ellipse_min_radius) * radius;  // a
     ellipse_major_radius = AiMax(radius, AiMin(ellipse_major_radius, 2.f * radius));  // r <= a <= 2r
 
@@ -128,7 +129,38 @@ std::pair<float, float> computePolynomialEllipticalKernelShape (
     return std::make_pair(ellipse_major_radius, ellipse_minor_radius);    
 }
 
+inline
+float computeSectorWeight(
+    const int sector_idx,
+    const float u,
+    const float v,
+    const float sigma_angle = .4f,
+    const float sigma_rad = .4f,
+    const int sector_num = 8
+)
+{
+    // Compute polar coordinates 
+    float r = AiSqr(u*u + v*v);
+    float angle = std::atan2(v, u);
+    if (angle < 0) angle += AI_PITIMES2;  // if angle is negative, add 2π to make it positive
 
-} // namespace anisotropic_kuwahara_arnold
+    // Compute the center of the sector
+    float sector_center = (sector_idx + 0.5f) * (AI_PITIMES2 / sector_num);
+
+    // Angular difference (make sure it is in [0, π])
+    float delta_phi = std::fabs(angle - sector_center);
+    if (delta_phi > AI_PI)
+        delta_phi = AI_PITIMES2 - delta_phi;
+
+    // Angular gaussian
+    float angular_weight = std::exp(- (delta_phi * delta_phi) / (2.0f * (sigma_angle * sigma_angle)));
+
+    // Radial gaussian
+    float radial_weight = std::exp(- (r * r) / (2.0f * (sigma_rad * sigma_rad)));
+
+    return angular_weight * radial_weight;
+}
+
+} // namespace anisotropic_kuwahara
 
 #endif // KUWAHARA_ARNOLD_KUWAHARA_H_

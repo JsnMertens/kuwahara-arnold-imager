@@ -2,7 +2,7 @@
 
 #include <ai.h>
 
-#include "kuwahara_arnold.hpp"
+#include "kuwahara.hpp"
 
 
 AI_IMAGER_NODE_EXPORT_METHODS(ClassicKuwaharaImagerMtd);
@@ -87,10 +87,10 @@ imager_evaluate
                 float   variance        = 0.0f;
 
                 // Iterate over the 4 quadrants
-                for (auto quadrant : kuwahara_arnold::quadrants)
+                for (auto quadrant : kuwahara::quadrants)
                 {
-                    grid::GridRegion quadrant_region = kuwahara_arnold::ComputeQuadrantRegion(center, grid, radius, quadrant);
-                    kuwahara_arnold::ComputeRegion(rgba, grid, quadrant_region, mean_color, variance);
+                    grid::GridRegion quadrant_region = kuwahara::computeQuadrantRegion(center, grid, radius, quadrant);
+                    kuwahara::computeRegion(rgba, grid, quadrant_region, mean_color, variance);
 
                     if (variance < best_variance)
                     {
