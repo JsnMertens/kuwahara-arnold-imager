@@ -6,37 +6,8 @@
 #include "kuwahara.hpp"
 #include "structure_tensor.hpp"
 
-#pragma warning(disable: 4100)
-
 
 AI_IMAGER_NODE_EXPORT_METHODS(AnisotropicKuwaharaImagerMtd);
-
-// polynomialBase(u, v) = max(0, u^2 - eta*v^2)^2
-inline float polynomialBase(float u, float v, float eta = 0.4f)
-{
-    float val = (u * u) - (eta * v * v);
-    return (val > 0.0f) ? (val * val) : 0.0f;
-}
-
-inline float polynomialSector(float u, float v, int sectorIndex, int totalSectors, float eta = 0.4f)
-{
-    // angle = -2πi / N
-    float angle = AI_PITIMES2 * static_cast<float>(sectorIndex) / static_cast<float>(totalSectors);
-    float cosA = std::cos(angle);
-    float sinA = std::sin(angle);
-
-    // Rotation inverse
-    float uR = cosA * u - sinA * v;
-    float vR = sinA * u + cosA * v;
-
-    // Évaluer la fonction polynomiale de base
-    return polynomialBase(uR, vR, eta);
-}
-
-
-
-
-
 
 
 namespace
@@ -94,7 +65,6 @@ imager_evaluate
 
     const float ellipse_min_radius = AiMax(.5f, AI_EPSILON);
     const int sectors_num = 8;  // N
-    const float sectors_numf = static_cast<float>(sectors_num);
     
     grid::GridSize grid(bucket_size_x, bucket_size_y);
 
