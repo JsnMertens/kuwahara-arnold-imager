@@ -2,6 +2,7 @@
 #define KUWAHARA_ARNOLD_KUWAHARA_H_
 
 #include <array>
+#include <cmath>
 
 #include <ai.h>
 #include <opencv2/opencv.hpp>
@@ -140,17 +141,22 @@ float computeSectorWeight(
 )
 {
     // Compute polar coordinates 
-    float r = AiSqr(u*u + v*v);
-    float angle = std::atan2(v, u);
-    if (angle < 0) angle += AI_PITIMES2;  // if angle is negative, add 2π to make it positive
+    float r = std::sqrtf(u*u + v*v);
+    float phi = std::atan2(v, u);
+    if (phi < 0)
+        phi += AI_PITIMES2;  // if angle is negative, add 2π to make it positive
 
     // Compute the center of the sector
     float sector_center = (sector_idx + 0.5f) * (AI_PITIMES2 / sector_num);
 
     // Angular difference (make sure it is in [0, π])
-    float delta_phi = std::fabs(angle - sector_center);
+    float delta_phi = std::fabs(phi - sector_center);
     if (delta_phi > AI_PI)
         delta_phi = AI_PITIMES2 - delta_phi;
+
+    float half_sector = AI_PI / sector_num;
+    if (delta_phi > half_sector)
+        return 0.0f;  // Outside the sector
 
     // Angular gaussian
     float angular_weight = std::exp(- (delta_phi * delta_phi) / (2.0f * (sigma_angle * sigma_angle)));
@@ -159,6 +165,17 @@ float computeSectorWeight(
     float radial_weight = std::exp(- (r * r) / (2.0f * (sigma_rad * sigma_rad)));
 
     return angular_weight * radial_weight;
+}
+
+
+inline
+float computeGaussianWeight(
+    const float x,
+    const float y,
+    const float sigma = 1.0f
+)
+{
+    return std::exp(- (x * x + y * y) / (2.0f * (sigma * sigma)));
 }
 
 } // namespace anisotropic_kuwahara

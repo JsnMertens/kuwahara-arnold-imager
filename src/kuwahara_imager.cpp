@@ -25,24 +25,6 @@ namespace
     static AtString radius_str("radius");
 }
 
-struct PixelData
-{
-    int idx;
-    AtRGBA color;
-
-    PixelData() : idx(0), color(AI_RGBA_ZERO) {}
-    PixelData(int idx, AtRGBA color) : idx(idx), color(color) {}
-};
-
-struct AOVData
-{
-    const void* bucket_data;
-    int         type;
-    std::vector<PixelData> pixels_data;
-
-    AOVData(const void* bucket_data, int type) : bucket_data(bucket_data), type(type) {}
-};
-
 imager_prepare
 {
     // Set the imager schedule type to full frame always as we need access to all neighbouring pixels
@@ -54,19 +36,18 @@ imager_evaluate
     // Node Parameters
     const int radius = AiNodeGetInt(node, radius_str);
 
-    grid::GridSize       grid(bucket_size_x, bucket_size_y);
+    grid::GridSize grid(bucket_size_x, bucket_size_y);
 
     const int num_pixels = bucket_size_x * bucket_size_y;
     std::vector<AtRGBA> data(num_pixels, {AI_RGB_BLACK, 1.0f});
 
     // Init vars for Iterator
-    int         aov_type = 0;
-    const void  *bucket_data;
-    AtString    output_name;
+    int aov_type = 0;
+    const void* bucket_data;
+    AtString output_name;
 
     while (AiOutputIteratorGetNext(iterator, &output_name, &aov_type, &bucket_data))
     {
-        auto aov_data = AOVData(bucket_data, aov_type);
         AtRGBA* rgba = (AtRGBA*)bucket_data;
 
         #pragma omp parallel for
