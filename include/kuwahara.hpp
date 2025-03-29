@@ -92,8 +92,7 @@ void computeRegion(AtRGBA* color, GridSize grid, const GridRegion& region, AtRGB
         variance = AI_BIG;
         return;
     }
-    float inv_countf = 1.0f / static_cast<float>(count);
-    mean *= inv_countf;
+    mean *= (1.0f / count);
 
     float sum_var = 0.0f;
     for (int y = region.min.y; y < region.max.y; ++y)
@@ -115,20 +114,72 @@ void computeRegion(AtRGBA* color, GridSize grid, const GridRegion& region, AtRGB
 namespace anisotropic_kuwahara
 {
 
+using KernelBbox = std::array<std::array<int, 2>, 2>; // [min_x, max_x], [min_y, max_y]
+using EllipseSize = std::pair<float, float>; // (major_radius, minor_radius)
+
 inline
-std::pair<float, float> computePolynomialEllipticalKernelShape (
+EllipseSize computePolynomialEllipticalKernelShape (
     const float anisotropy,
     const float radius,
-    const float ellipse_min_radius = 1.0f  // alpha
+    const float eccentricity = 1.0f  // alpha
 )
 {
-    float ellipse_major_radius = ((ellipse_min_radius + anisotropy) / ellipse_min_radius) * radius;  // a
-    ellipse_major_radius = AiMax(radius, AiMin(ellipse_major_radius, 2.f * radius));  // r <= a <= 2r
+    float ellipse_major_radius = ((eccentricity + anisotropy) / eccentricity) * radius;  // a
+    ellipse_major_radius = AiMax(radius, AiMin(ellipse_major_radius, 2.0f * radius));  // r <= a <= 2r
 
-    float ellipse_minor_radius = (ellipse_min_radius / (ellipse_min_radius + anisotropy)) * radius;  // b
-    ellipse_minor_radius = AiMax(radius * .5f, AiMin(ellipse_minor_radius, radius));  // r/2 <= b <= r
+    float ellipse_minor_radius = (eccentricity / (eccentricity + anisotropy)) * radius;  // b
+    ellipse_minor_radius = AiMax(radius * 0.5f, AiMin(ellipse_minor_radius, radius));  // r/2 <= b <= r
 
-    return std::make_pair(ellipse_major_radius, ellipse_minor_radius);    
+    return EllipseSize(ellipse_major_radius, ellipse_minor_radius);
+}
+
+inline
+void computeEllipticalKernelBbox(
+    const int x,
+    const int y,
+    const EllipseSize& ellipse_size,
+    const float orientation_cos,
+    const float orientation_sin,
+    const int max_width,
+    const int max_height,
+    KernelBbox& bbox
+)
+{
+    const int half_width = static_cast<int>(
+        std::ceil(std::abs(ellipse_size.first * orientation_cos) + 
+        std::abs(ellipse_size.second * orientation_sin))
+    );
+
+    const int half_height = static_cast<int>(
+        std::ceil(std::abs(ellipse_size.first * orientation_sin) +
+        std::abs(ellipse_size.second * orientation_cos))
+    );
+
+    // Compute the kernel bounding box
+    bbox[0][0] = AiMax(x - half_width,  0);
+    bbox[0][1] = AiMin(x + half_width,  max_width);
+    bbox[1][0] = AiMax(y - half_height, 0);
+    bbox[1][1] = AiMin(y + half_height, max_height);
+}
+
+inline
+cv::Matx22f computeEllipseToUnitDiskMatrix(
+    const EllipseSize& ellipse_size,
+    float orientation_cos,
+    float orientation_sin
+)
+{
+    cv::Matx22f scale_mat(
+        1.0f / ellipse_size.first, 0.0f,
+        0.0f, 1.0f / ellipse_size.second
+    );  // S = [1/a 0; 0 1/b]
+
+    cv::Matx22f rot_mat(
+         orientation_cos, orientation_sin,
+        -orientation_sin, orientation_cos
+    );  // R = [cos(theta) sin(theta); -sin(theta) cos(theta)]
+
+    return scale_mat * rot_mat;  // M = S * R
 }
 
 inline
@@ -181,7 +232,6 @@ float computeSectorWeight(
 
     return sum_weight;
 }
-
 
 } // namespace anisotropic_kuwahara
 

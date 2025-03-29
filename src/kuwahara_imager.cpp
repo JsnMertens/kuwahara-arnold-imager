@@ -5,7 +5,7 @@
 #include "kuwahara.hpp"
 
 
-AI_IMAGER_NODE_EXPORT_METHODS(ClassicKuwaharaImagerMtd);
+AI_IMAGER_NODE_EXPORT_METHODS(KuwaharaImagerMtd);
 
 node_parameters
 {

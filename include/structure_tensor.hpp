@@ -38,11 +38,17 @@ namespace structure_tensor
 using namespace grid;
 
 inline
-cv::Mat computeStructureTensor(const AtRGBA* rgba, GridSize &grid, int kernelsize = 3, double sigma = 1.0)
+cv::Mat computeStructureTensor(
+    const AtRGBA* color_ptr,
+    const int img_size_x,
+    const int img_size_y,
+    int kernelsize = 3,
+    double sigma = 1.0
+)
 {
     // Build luminance image
-    cv::Mat img(grid.y, grid.x, CV_32F);
-    buildLuminanceImage(rgba, grid.x, grid.y, img);
+    cv::Mat img(img_size_y, img_size_x, CV_32F);
+    buildLuminanceImage(color_ptr, img_size_x, img_size_y, img);
 
     // Compute gradients
     cv::Mat grad_x, grad_y;

@@ -1,11 +1,11 @@
 #include <ai.h>
 
-extern const AtNodeMethods* ClassicKuwaharaImagerMtd;
+extern const AtNodeMethods* KuwaharaImagerMtd;
 extern const AtNodeMethods* AnisotropicKuwaharaImagerMtd;
 
 enum
 {
-    CLASSIC_KUWAHARA_IMAGER,
+    KUWAHARA_IMAGER,
     ANISOTROPIC_KUWAHARA_IMAGER
 };
 
@@ -13,10 +13,10 @@ node_loader
 {
     switch(i)
 	{
-    case CLASSIC_KUWAHARA_IMAGER:
-        node->methods     = (AtNodeMethods*) ClassicKuwaharaImagerMtd;
+    case KUWAHARA_IMAGER:
+        node->methods     = (AtNodeMethods*) KuwaharaImagerMtd;
         node->output_type = AI_TYPE_NODE;
-        node->name        = "imager_ooClassicKuwahara";
+        node->name        = "imager_ooKuwahara";
         node->node_type   = AI_NODE_IMAGER;
         break;
 
