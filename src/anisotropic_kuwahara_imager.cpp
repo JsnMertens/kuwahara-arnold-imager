@@ -157,18 +157,18 @@ imager_evaluate
                         if (!is_inside)
                             continue;
 
-                        // Get the pixel color and intensity
-                        const AtRGBA& pixel_color = output_pixel_ptr[sub_idx];
-
                         // Compute the sector weights
                         std::array<float, num_sectors> sector_weights = {}; sector_weights.fill(0.0f);
                         float sum_weight = anisotropic_kuwahara::computeSectorWeight(u, v, radiusf, sector_weights);
 
                         if (sum_weight <= AI_EPSILON)
-                        continue;
+                            continue;
                         
                         // Compute a Gaussian weight so that pixels further from the kernel origin have less weight
                         float radial_gaussian_weight = std::exp(-AI_PI * uv_point.dot(uv_point)) / sum_weight;
+
+                        // Get the pixel color
+                        const AtRGBA& pixel_color = output_pixel_ptr[sub_idx];
 
                         for (int i = 0; i < num_sectors; ++i)
                         {
@@ -200,7 +200,8 @@ imager_evaluate
                     float variance = variance_r + variance_g + variance_b;
 
                     float standard_deviation = std::sqrt(variance);
-                    float standard_deviation_factor = 1.0f / (1.0f * std::pow(standard_deviation, (8.0f * sharpness)));  // q = 8.0f
+                    float standard_deviation_factor =
+                        1.0f / (1.0f * std::pow(standard_deviation, (8.0f * sharpness)));  // q = 8.0f
                     
                     final_color_sum += mean_color * standard_deviation_factor;
                     standard_deviation_sum += standard_deviation_factor;
