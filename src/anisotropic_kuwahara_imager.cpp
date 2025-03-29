@@ -211,7 +211,7 @@ imager_evaluate
 
                 const AtRGBA final_color = final_color_sum / standard_deviation_sum;
                 if (AiColorIsSmall(AtRGB(final_color)) || !AiRGBAIsFinite(final_color))
-                    data[idx] = (final_color_sum / standard_deviation_sum);  // Keep the original color if color is corrupted
+                    data[idx] = output_pixel_ptr[idx];  // Keep the original color if color is corrupted
                 else
                     data[idx] = (final_color_sum / standard_deviation_sum);
 
