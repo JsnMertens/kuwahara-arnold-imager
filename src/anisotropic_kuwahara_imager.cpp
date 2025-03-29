@@ -49,7 +49,7 @@ imager_evaluate
 
     const float radiusf = static_cast<float>(radius);  // Used for computations
     const float eccentricity = AiMax(AiNodeGetFlt(node, param_eccentricity), AI_EPSILON);
-    const float sharpness = AiMax(AiNodeGetFlt(node, param_sharpness), AI_EPSILON);
+    const float sharpness = AiMin(3.0f, AiMax(AiNodeGetFlt(node, param_sharpness), AI_EPSILON));  // Sharpness over 3.0f create too much corrupted values
 
     const int num_sectors = 8;  // N
     
@@ -125,11 +125,13 @@ imager_evaluate
                     std::ceil(std::abs(ellipse_major_radius * orientation_sin) +
                     std::abs(ellipse_minor_radius * orientation_cos));
 
+                // Compute the kernel bounding box
                 const int kernel_min_x = AiMax(x - static_cast<int>(half_width),  0);
                 const int kernel_max_x = AiMin(x + static_cast<int>(half_width),  bucket_size_x);
                 const int kernel_min_y = AiMax(y - static_cast<int>(half_height), 0);
                 const int kernel_max_y = AiMin(y + static_cast<int>(half_height), bucket_size_y);
 
+                // Output kernel data
                 std::array<float,  num_sectors> sum_weights        = {}; sum_weights.fill(0.0f);
                 std::array<AtRGBA, num_sectors> sum_colors         = {}; sum_colors.fill(AI_RGB_BLACK);
                 std::array<AtRGBA, num_sectors> sum_colors_squared = {}; sum_colors_squared.fill(AI_RGB_BLACK);
@@ -172,7 +174,7 @@ imager_evaluate
 
                         for (int i = 0; i < num_sectors; ++i)
                         {
-                            sector_weights[i]     *= radial_gaussian_weight;  // Normalize
+                            sector_weights[i]     *= radial_gaussian_weight;
 
                             sum_weights[i]        += sector_weights[i];
                             sum_colors[i]         += pixel_color * sector_weights[i];
@@ -209,7 +211,7 @@ imager_evaluate
 
                 const AtRGBA final_color = final_color_sum / standard_deviation_sum;
                 if (AiColorIsSmall(AtRGB(final_color)) || !AiRGBAIsFinite(final_color))
-                    data[idx] = output_pixel_ptr[idx];  // Keep the original color if color is corrupted
+                    data[idx] = (final_color_sum / standard_deviation_sum);  // Keep the original color if color is corrupted
                 else
                     data[idx] = (final_color_sum / standard_deviation_sum);
 
