@@ -55,19 +55,14 @@ cv::Mat computeStructureTensor(const AtRGBA* rgba, GridSize &grid, int kernelsiz
     cv::Mat Jxy = grad_x.mul(grad_y);
     cv::Mat Jyy = grad_y.mul(grad_y);
 
-    cv::Size size(kernelsize, kernelsize);
-    cv::GaussianBlur(Jxx, Jxx, size, sigma);
-    cv::GaussianBlur(Jxy, Jxy, size, sigma);
-    cv::GaussianBlur(Jyy, Jyy, size, sigma);
-
     // Merge components into a 3-channel image
     std::vector<cv::Mat> channels = { Jxx, Jxy, Jyy };
     cv::Mat structure_tensor;
     cv::merge(channels, structure_tensor);
 
     // Blur the structure tensor for noise reduction
-    // cv::Size size(kernelsize, kernelsize);
-    // cv::GaussianBlur(structure_tensor, structure_tensor, size, sigma);
+    cv::Size size(kernelsize, kernelsize);
+    cv::GaussianBlur(structure_tensor, structure_tensor, size, sigma);
 
     return structure_tensor;
 }

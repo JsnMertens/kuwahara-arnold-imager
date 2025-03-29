@@ -9,6 +9,7 @@
 
 #include "grid.hpp"
 
+static constexpr float SQRT2_OVER2 = 0.70710678f;
 
 namespace kuwahara
 {
@@ -132,51 +133,55 @@ std::pair<float, float> computePolynomialEllipticalKernelShape (
 
 inline
 float computeSectorWeight(
-    const int sector_idx,
     const float u,
     const float v,
-    const float sigma_angle = .4f,
-    const float sigma_rad = .4f,
-    const int sector_num = 8
+    const float radius,
+    std::array<float, 8>& sector_weights
 )
 {
-    // Compute polar coordinates 
-    float r = std::sqrtf(u*u + v*v);
-    float phi = std::atan2(v, u);
-    if (phi < 0)
-        phi += AI_PITIMES2;  // if angle is negative, add 2π to make it positive
+    // Output
+    float sum_weight = 0.0f;
 
-    // Compute the center of the sector
-    float sector_center = (sector_idx + 0.5f) * (AI_PITIMES2 / sector_num);
+    // Parameters from the Paper:
+    // "Anisotropic Kuwahara Filtering with Polynomial Weighting Functions"
+    static const float zeta = 2.0f / radius;
+    static const float gamma = AI_PI / 8.0f; // 3π/8
+    static const float eta = zeta + std::cos(gamma) / AiSqr(std::sin(gamma));
 
-    // Angular difference (make sure it is in [0, π])
-    float delta_phi = std::fabs(phi - sector_center);
-    if (delta_phi > AI_PI)
-        delta_phi = AI_PITIMES2 - delta_phi;
+    // Compute polynomial weights for each even sector
+    float poly_u = zeta - eta * u * u;
+    float poly_v = zeta - eta * v * v;
 
-    float half_sector = AI_PI / sector_num;
-    if (delta_phi > half_sector)
-        return 0.0f;  // Outside the sector
+    sector_weights[0] = AiSqr(AiMax(0.0f,  v + poly_u));
+    sector_weights[2] = AiSqr(AiMax(0.0f, -u + poly_v));
+    sector_weights[4] = AiSqr(AiMax(0.0f, -v + poly_u));
+    sector_weights[6] = AiSqr(AiMax(0.0f,  u + poly_v));
 
-    // Angular gaussian
-    float angular_weight = std::exp(- (delta_phi * delta_phi) / (2.0f * (sigma_angle * sigma_angle)));
+    // Rotate by 45 degrees and the compute polynomial weights for each odd sector
+    const float rotated_u = SQRT2_OVER2 * (u - v);
+    const float rotated_v = SQRT2_OVER2 * (u + v);
 
-    // Radial gaussian
-    float radial_weight = std::exp(- (r * r) / (2.0f * (sigma_rad * sigma_rad)));
+    poly_u = zeta - eta * rotated_u * rotated_u;
+    poly_v = zeta - eta * rotated_v * rotated_v;
 
-    return angular_weight * radial_weight;
+    sector_weights[1] = AiSqr(AiMax(0.0f,  rotated_v + poly_u));
+    sector_weights[3] = AiSqr(AiMax(0.0f, -rotated_u + poly_v));
+    sector_weights[5] = AiSqr(AiMax(0.0f, -rotated_v + poly_u));
+    sector_weights[7] = AiSqr(AiMax(0.0f,  rotated_u + poly_v));
+
+    // sum weights
+    sum_weight += sector_weights[0];
+    sum_weight += sector_weights[1];
+    sum_weight += sector_weights[2];
+    sum_weight += sector_weights[3];
+    sum_weight += sector_weights[4];
+    sum_weight += sector_weights[5];
+    sum_weight += sector_weights[6];
+    sum_weight += sector_weights[7];
+
+    return sum_weight;
 }
 
-
-inline
-float computeGaussianWeight(
-    const float x,
-    const float y,
-    const float sigma = 1.0f
-)
-{
-    return std::exp(- (x * x + y * y) / (2.0f * (sigma * sigma)));
-}
 
 } // namespace anisotropic_kuwahara
 

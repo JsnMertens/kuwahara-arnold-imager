@@ -22,7 +22,7 @@ node_update
 
 namespace
 {
-    static AtString radius_str("radius");
+    static AtString param_radius("radius");
 }
 
 imager_prepare
@@ -34,7 +34,7 @@ imager_prepare
 imager_evaluate
 {
     // Node Parameters
-    const int radius = AiNodeGetInt(node, radius_str);
+    const int radius = AiNodeGetInt(node, param_radius);
 
     grid::GridSize grid(bucket_size_x, bucket_size_y);
 
