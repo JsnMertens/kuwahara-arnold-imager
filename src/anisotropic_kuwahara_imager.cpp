@@ -92,12 +92,9 @@ imager_evaluate
                 const auto [orientation_rad, anisotropy] = 
                     structure_tensor::computeLocalOrientationAndAnisotropyAtPoint(structureTensor, x, y);
 
-                // Compute the kernel shape
-                float ellipse_major_radius = ((eccentricity + anisotropy) / eccentricity) * radiusf;  // a
-                ellipse_major_radius = AiMax(radiusf, AiMin(ellipse_major_radius, 2.f * radiusf));  // r <= a <= 2r
-            
-                float ellipse_minor_radius = (eccentricity / (eccentricity + anisotropy)) * radiusf;  // b
-                ellipse_minor_radius = AiMax(radiusf * 0.5f, AiMin(ellipse_minor_radius, radiusf));
+                // Compute the kernel shape; a anb b
+                const auto [ellipse_major_radius, ellipse_minor_radius] = 
+                    anisotropic_kuwahara::computePolynomialEllipticalKernelShape(anisotropy, radiusf, eccentricity);
 
                 // Compute the scale matrix
                 cv::Matx22f scale_mat(
@@ -131,7 +128,7 @@ imager_evaluate
                 const int kernel_min_y = AiMax(y - static_cast<int>(half_height), 0);
                 const int kernel_max_y = AiMin(y + static_cast<int>(half_height), bucket_size_y);
 
-                // Output kernel data
+                // Allocate output kernel data
                 std::array<float,  num_sectors> sum_weights        = {}; sum_weights.fill(0.0f);
                 std::array<AtRGBA, num_sectors> sum_colors         = {}; sum_colors.fill(AI_RGB_BLACK);
                 std::array<AtRGBA, num_sectors> sum_colors_squared = {}; sum_colors_squared.fill(AI_RGB_BLACK);
