@@ -7,15 +7,17 @@
 #include <ai.h>
 #include <opencv2/opencv.hpp>
 
-#include "grid.hpp"
-
 static constexpr float SQRT2_OVER2 = 0.70710678f;
 
 namespace kuwahara
 {
-    
-using namespace grid;
 
+struct KernelBbox
+{
+    cv::Point2i min;
+    cv::Point2i max;
+};
+    
 enum class Quadrant
 {
     kTopLeft,
@@ -32,81 +34,95 @@ constexpr std::array<Quadrant, 4> quadrants = {
 };
 
 inline
-GridRegion computeQuadrantRegion(const GridPoint& center, const GridSize& grid, int radius, Quadrant quadrant)
+KernelBbox computeQuadrantKernelBbox(
+    const cv::Point2i& center,
+    const int radius,
+    const cv::Point2i& img_size,
+    const Quadrant quadrant
+)
 {
-    GridRegion region;
-
+    KernelBbox bbox;
     switch (quadrant)
     {
         case Quadrant::kTopLeft:
-            region.min.x = AiMax(0, center.x - radius);
-            region.max.x = center.x;
-            region.min.y = AiMax(0, center.y - radius);
-            region.max.y = center.y;
+            bbox.min.x = AiMax(0, center.x - radius);
+            bbox.max.x = center.x;
+            bbox.min.y = AiMax(0, center.y - radius);
+            bbox.max.y = center.y;
             break;
 
         case Quadrant::kTopRight:
-            region.min.x = center.x;
-            region.max.x = AiMin(grid.x, center.x + radius);
-            region.min.y = AiMax(0, center.y - radius);
-            region.max.y = center.y;
+            bbox.min.x = center.x;
+            bbox.max.x = AiMin(img_size.x, center.x + radius);
+            bbox.min.y = AiMax(0, center.y - radius);
+            bbox.max.y = center.y;
             break;
 
         case Quadrant::kBottomLeft:
-            region.min.x = AiMax(0, center.x - radius);
-            region.max.x = center.x;
-            region.min.y = center.y;
-            region.max.y = AiMin(grid.y, center.y + radius);
+            bbox.min.x = AiMax(0, center.x - radius);
+            bbox.max.x = center.x;
+            bbox.min.y = center.y;
+            bbox.max.y = AiMin(img_size.y, center.y + radius);
             break;
 
         case Quadrant::kBottomRight:
-            region.min.x = center.x;
-            region.max.x = AiMin(grid.x, center.x + radius);
-            region.min.y = center.y;
-            region.max.y = AiMin(grid.y, center.y + radius);
+            bbox.min.x = center.x;
+            bbox.max.x = AiMin(img_size.x, center.x + radius);
+            bbox.min.y = center.y;
+            bbox.max.y = AiMin(img_size.y, center.y + radius);
             break;
     }
-
-    return region;
+    return bbox;
 }
 
 inline
-void computeRegion(AtRGBA* color, GridSize grid, const GridRegion& region, AtRGBA& mean, float& variance)
+std::pair<AtRGBA, float> computeRegion(
+    const AtRGBA* color,
+    const cv::Point2i& img_size,
+    const KernelBbox& kernel_bbox)
 {
     int count = 0;
-    mean = AI_RGBA_ZERO;
+    AtRGBA mean = AI_RGBA_ZERO;
+    float variance = AI_BIG;
 
-    for (int y = region.min.y; y < region.max.y; ++y)
+    // Compute mean color
+    for (int y = kernel_bbox.min.y; y < kernel_bbox.max.y; ++y)
     {
-        for (int x = region.min.x; x < region.max.x; ++x)
+        const int base_idx = y * img_size.x;
+        for (int x = kernel_bbox.min.x; x < kernel_bbox.max.x; ++x)
         {
-            int idx = y * grid.x + x;
-
+            const int idx = base_idx + x;
             mean += color[idx];
             count++;
         }
     }
+    // If the kernel is empty, return zero
     if (count == 0)
-    {
-        mean = AI_RGBA_ZERO;
-        variance = AI_BIG;
-        return;
-    }
-    mean *= (1.0f / count);
+        return std::make_pair(AI_RGBA_ZERO, AI_BIG);
 
+    // Normalize mean color
+    mean *= (1.0f / count);
+    
+    // Compute variance
     float sum_var = 0.0f;
-    for (int y = region.min.y; y < region.max.y; ++y)
+    for (int y = kernel_bbox.min.y; y < kernel_bbox.max.y; ++y)
     {
-        for (int x = region.min.x; x < region.max.x; ++x)
+        const int base_idx = y * img_size.x;
+        for (int x = kernel_bbox.min.x; x < kernel_bbox.max.x; ++x)
         {
-            int idx = y * grid.x + x;
-            float dr = color[idx].r - mean.r;
-            float dg = color[idx].g - mean.g;
-            float db = color[idx].b - mean.b;
-            sum_var += (dr * dr + dg * dg + db * db);
+            const int idx = base_idx + x;
+
+            const float dr = color[idx].r - mean.r;
+            const float dg = color[idx].g - mean.g;
+            const float db = color[idx].b - mean.b;
+            
+            sum_var += (dr*dr + dg*dg + db*db);
         }
     }
-    variance = sum_var / count; 
+    // Normalize variance
+    variance = sum_var / count;
+
+    return std::make_pair(mean, variance);
 }
 
 } // namespace kuwahara
@@ -114,11 +130,23 @@ void computeRegion(AtRGBA* color, GridSize grid, const GridRegion& region, AtRGB
 namespace anisotropic_kuwahara
 {
 
-using KernelBbox = std::array<std::array<int, 2>, 2>; // [min_x, max_x], [min_y, max_y]
-using EllipseSize = std::pair<float, float>; // (major_radius, minor_radius)
+// Number of sectors in the kernel.
+// Could be 4 or 8, but 8 is better for anisotropic kernels and the code is designed for 8.
+static constexpr int sector_size = 8;
+
+using KernelBbox = kuwahara::KernelBbox;
+
+struct EllipseRadius
+{
+    float max;
+    float min;
+
+    EllipseRadius(float max_radius, float min_radius)
+        : max(max_radius), min(min_radius) {}
+};
 
 inline
-EllipseSize computePolynomialEllipticalKernelShape (
+EllipseRadius computePolynomialEllipticalKernelShape (
     const float anisotropy,
     const float radius,
     const float eccentricity = 1.0f  // alpha
@@ -130,48 +158,49 @@ EllipseSize computePolynomialEllipticalKernelShape (
     float ellipse_minor_radius = (eccentricity / (eccentricity + anisotropy)) * radius;  // b
     ellipse_minor_radius = AiMax(radius * 0.5f, AiMin(ellipse_minor_radius, radius));  // r/2 <= b <= r
 
-    return EllipseSize(ellipse_major_radius, ellipse_minor_radius);
+    return EllipseRadius(ellipse_major_radius, ellipse_minor_radius);
 }
 
 inline
-void computeEllipticalKernelBbox(
+KernelBbox computeEllipticalKernelBbox(
     const int x,
     const int y,
-    const EllipseSize& ellipse_size,
+    const EllipseRadius& ellipse_radius,
+    const cv::Point2i& max_size,
     const float orientation_cos,
-    const float orientation_sin,
-    const int max_width,
-    const int max_height,
-    KernelBbox& bbox
+    const float orientation_sin
 )
 {
     const int half_width = static_cast<int>(
-        std::ceil(std::abs(ellipse_size.first * orientation_cos) + 
-        std::abs(ellipse_size.second * orientation_sin))
+        std::ceil(std::abs(ellipse_radius.max * orientation_cos) + 
+        std::abs(ellipse_radius.min * orientation_sin))
     );
 
     const int half_height = static_cast<int>(
-        std::ceil(std::abs(ellipse_size.first * orientation_sin) +
-        std::abs(ellipse_size.second * orientation_cos))
+        std::ceil(std::abs(ellipse_radius.max * orientation_sin) +
+        std::abs(ellipse_radius.min * orientation_cos))
     );
 
     // Compute the kernel bounding box
-    bbox[0][0] = AiMax(x - half_width,  0);
-    bbox[0][1] = AiMin(x + half_width,  max_width);
-    bbox[1][0] = AiMax(y - half_height, 0);
-    bbox[1][1] = AiMin(y + half_height, max_height);
+    KernelBbox bbox;
+    bbox.min.x = AiMax(x - half_width,  0);
+    bbox.min.y = AiMax(y - half_height, 0);
+    bbox.max.x = AiMin(x + half_width,  max_size.x);
+    bbox.max.y = AiMin(y + half_height, max_size.y);
+
+    return bbox;
 }
 
 inline
 cv::Matx22f computeEllipseToUnitDiskMatrix(
-    const EllipseSize& ellipse_size,
+    const EllipseRadius& ellipse_radius,
     float orientation_cos,
     float orientation_sin
 )
 {
     cv::Matx22f scale_mat(
-        1.0f / ellipse_size.first, 0.0f,
-        0.0f, 1.0f / ellipse_size.second
+        1.0f / ellipse_radius.max, 0.0f,
+        0.0f, 1.0f / ellipse_radius.min
     );  // S = [1/a 0; 0 1/b]
 
     cv::Matx22f rot_mat(
@@ -196,7 +225,7 @@ float computeSectorWeight(
     // Parameters from the Paper:
     // "Anisotropic Kuwahara Filtering with Polynomial Weighting Functions"
     static const float zeta = 2.0f / radius;
-    static const float gamma = AI_PI / 8.0f; // 3π/8
+    static const float gamma = AI_PI / 8.0f;
     static const float eta = zeta + std::cos(gamma) / AiSqr(std::sin(gamma));
 
     // Compute polynomial weights for each even sector

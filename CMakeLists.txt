@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.21)
 
 project(ooKuwaharaArnoldImager LANGUAGES CXX)
 
-
 # Force 64-bit builds on Windows
 if (WIN32 AND NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
     message(FATAL_ERROR "Only 64-bit builds are supported on Windows.")
@@ -24,7 +23,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)  # Don't work with MSVC
 
 if(MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    add_compile_options(/W4 /wd4100)  # Warning level 4
+    add_compile_options(/W4 /wd4100)  # Warning level 4 and disable unused parameter warning
 else()
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
@@ -77,9 +76,9 @@ endif()
 install(
     TARGETS ${PROJECT_NAME}
     EXPORT ${PROJECT_NAME}Targets
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}    # for executables and DLLs on Windows
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}    # for shared libraries on UNIX
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}    # for static libraries, if any
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}  # for executables and DLLs on Windows
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}  # for shared libraries on UNIX
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}  # for static libraries, if any
 )
 
 install(

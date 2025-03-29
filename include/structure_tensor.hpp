@@ -5,8 +5,6 @@
 
 #include <opencv2/opencv.hpp>
 
-#include "grid.hpp"
-
 namespace
 {
 
@@ -35,25 +33,21 @@ void buildLuminanceImage(const AtRGBA* rgba, const int bucket_size_x, const int 
 namespace structure_tensor
 {
 
-using namespace grid;
-
 inline
 cv::Mat computeStructureTensor(
     const AtRGBA* color_ptr,
-    const int img_size_x,
-    const int img_size_y,
-    int kernelsize = 3,
-    double sigma = 1.0
+    const cv::Point2i& img_size,
+    unsigned int kernelsize = 3
 )
 {
     // Build luminance image
-    cv::Mat img(img_size_y, img_size_x, CV_32F);
-    buildLuminanceImage(color_ptr, img_size_x, img_size_y, img);
+    cv::Mat img(img_size.y, img_size.x, CV_32F);
+    buildLuminanceImage(color_ptr, img_size.x, img_size.y, img);
 
     // Compute gradients
     cv::Mat grad_x, grad_y;
-    cv::Sobel(img, grad_x, CV_32F, 1, 0, kernelsize);
-    cv::Sobel(img, grad_y, CV_32F, 0, 1, kernelsize);
+    cv::Sobel(img, grad_x, CV_32F, 1, 0, 3);
+    cv::Sobel(img, grad_y, CV_32F, 0, 1, 3);
 
     // Compute structure tensor
     // Structure Tensor = J = [Jxx Jxy; Jxy Jyy]
@@ -67,8 +61,12 @@ cv::Mat computeStructureTensor(
     cv::merge(channels, structure_tensor);
 
     // Blur the structure tensor for noise reduction
+    // The kernel size should be odd and positive, force it to be odd
+    if (kernelsize % 2 == 0)
+        kernelsize += 1;
+        
     cv::Size size(kernelsize, kernelsize);
-    cv::GaussianBlur(structure_tensor, structure_tensor, size, sigma);
+    cv::GaussianBlur(structure_tensor, structure_tensor, size, 0.0);
 
     return structure_tensor;
 }
