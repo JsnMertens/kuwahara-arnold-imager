@@ -1,0 +1,3 @@
+[submodule "vfx-cmake-modules"]
+	path = vfx-cmake-modules
+	url = https://github.com/JsnMertens/vfx-cmake-modules
