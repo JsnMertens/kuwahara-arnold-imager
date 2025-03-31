@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(ooKuwaharaArnoldImager LANGUAGES CXX)
+project(ooKuwaharaArnoldImager VERSION 1.1.0 LANGUAGES CXX)
 
 # Force 64-bit builds on Windows
 if (WIN32 AND NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -8,6 +8,7 @@ if (WIN32 AND NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
 endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/vfx-cmake-modules/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/vfx-cmake-modules/cmake/modules")
 
 include(GNUInstallDirs)
 
@@ -71,6 +72,23 @@ if(MSVC)
 endif()
 
 # ================================================
+# Generate artifacts for Arnold and DCCs
+# ================================================
+# Generate the module description file for Maya
+set(MAYA_MODULE_BINARY_DIR  "${CMAKE_CURRENT_BINARY_DIR}/MayaModule")
+set(MAYA_MODULE_NAME        "${PROJECT_NAME}.mod")
+set(MAYA_AE_TEMPLATES_DIR   "scripts/mtoa/ui/ae")
+
+include(GenerateMayaModuleFile)
+generate_maya_module_file(
+    MODULE_NAME ${PROJECT_NAME}
+    MODULE_VERSION ${PROJECT_VERSION}
+    DST_DIRPATH ${MAYA_MODULE_BINARY_DIR}
+    ARNOLD_PLUGIN_PATH ${CMAKE_INSTALL_BINDIR}
+    MTOA_TEMPLATES_PATH ${MAYA_AE_TEMPLATES_DIR}
+)
+
+# ================================================
 # Install
 # ================================================
 install(
@@ -78,10 +96,27 @@ install(
     EXPORT ${PROJECT_NAME}Targets
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}  # for executables and DLLs on Windows
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}  # for shared libraries on UNIX
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}  # for static libraries, if any
 )
 
+# Install MTD file, rename it to ensure it has the same name as the library
+# This is important for Arnold to find the plugin
 install(
-    FILES ${HEADERS}
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
+    FILES ${CMAKE_CURRENT_SOURCE_DIR}/mtd/ooKuwaharaArnoldImager.mtd
+    DESTINATION ${CMAKE_INSTALL_BINDIR}/
+    RENAME ${PROJECT_NAME}.mtd
+)
+
+# Install the AE templates for Maya
+install(
+    DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ae/"
+    DESTINATION "${CMAKE_INSTALL_PREFIX}/${MAYA_AE_TEMPLATES_DIR}"
+    FILES_MATCHING
+        PATTERN "*.py"
+        PATTERN "*.mel"
+)
+
+# Install the module description file for Maya
+install(
+    FILES ${MAYA_MODULE_BINARY_DIR}/${MAYA_MODULE_NAME}
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/
 )
