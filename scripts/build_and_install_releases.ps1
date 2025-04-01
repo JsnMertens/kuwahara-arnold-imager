@@ -25,6 +25,17 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+Write-Host "---------------------------------"
+Write-Host "Building Release for Arnold-7.3.5"
+Write-Host "---------------------------------"
+cmake --preset windows-arnold-7.4.1
+cmake --build . --target install --preset windows-arnold-7.4.1-release
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Build for windows-arnold-7.4.1-release failed!"
+    Pop-Location
+    exit 1
+}
+
 Pop-Location
 
 Write-Host "-------------------------------"

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(ooKuwaharaArnoldImager VERSION 1.1.0 LANGUAGES CXX)
+project(ooKuwaharaArnoldImager VERSION 1.2.0 LANGUAGES CXX)
 
 # Force 64-bit builds on Windows
 if (WIN32 AND NOT CMAKE_SIZEOF_VOID_P EQUAL 8)

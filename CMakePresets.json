@@ -45,6 +45,17 @@
             "environment": {
                 "Arnold_ROOT": "$env{SDKS_ROOT}/Arnold/7.3.5.0"
             }
+        },
+        {
+            "name": "windows-arnold-7.4.1",
+            "inherits": "windows-default",
+            "binaryDir": "${sourceDir}/build/arnold-7.4.1",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceParentDir}/../plugins/ooKuwaharaArnoldImager/Arnold-7.4.1"
+            },
+            "environment": {
+                "Arnold_ROOT": "$env{SDKS_ROOT}/Arnold/7.4.1.0"
+            }
         }
     ],
     "buildPresets": [
@@ -66,6 +77,16 @@
         {
             "name": "windows-arnold-7.3.5-release",
             "configurePreset": "windows-arnold-7.3.5",
+            "configuration": "Release"
+        },
+        {
+            "name": "windows-arnold-7.4.1-debug",
+            "configurePreset": "windows-arnold-7.4.1",
+            "configuration": "Debug"
+        },
+        {
+            "name": "windows-arnold-7.4.1-release",
+            "configurePreset": "windows-arnold-7.4.1",
             "configuration": "Release"
         }
     ]
