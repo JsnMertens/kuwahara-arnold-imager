@@ -30,8 +30,6 @@ Uses a polynomial anisotropic variation to provide greater artistic control. Thi
 ![Anisotropic Kuwahara Lion Comparaison](./examples/anistropicKuwahara-lion-comparaison.jpg)  
 *Lion Photography.*
 
-![Anisotropic Kuwahara Dragon](./examples/anistropicKuwahara-dragon-comparaisonmesh.jpg)
-
 ![Anisotropic Kuwahara Dragon](./examples/anistropicKuwahara-dragon.jpg)
 
 ![Anisotropic Kuwahara Bunny](./examples/anistropicKuwahara-bunny.jpg)
