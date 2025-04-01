@@ -1,6 +1,6 @@
 # kuwahara-arnold-imager
 
-Set of two Arnold Imager plugins that use the Kuwahara Filter to achieve a stylized [NPR](https://en.wikipedia.org/wiki/Non-photorealistic_rendering) look.
+Set of two Arnold Imager plugins that use the [Kuwahara Filter](https://en.wikipedia.org/wiki/Kuwahara_filter) to achieve a stylized [NPR](https://en.wikipedia.org/wiki/Non-photorealistic_rendering) look.
 
 ## Feature
 
