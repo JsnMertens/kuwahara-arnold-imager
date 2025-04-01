@@ -12,13 +12,17 @@ Uses a polynomial anisotropic variation to provide greater artistic control. Thi
 
 ## Examples
 
+### Maya Demo
+
 ![Anisotropic Kuwahara Maya Demo](./examples/recording-demo-maya.gif)
+*Maya Imager Demo*
 
 ![Anisotropic Kuwahara Dragon](./examples/anistropicKuwahara-dragon-comparaisonmesh.jpg)
 
 ![Anisotropic Kuwahara Bunny](./examples/anistropicKuwahara-bunny-comparaison.jpg)
 
 ![Anisotropic Kuwahara Lion](./examples/anistropicKuwahara-lion-comparaison.jpg)
+*Lion Photography*
 
 ## Requirements
 
