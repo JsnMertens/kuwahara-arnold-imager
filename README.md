@@ -10,9 +10,15 @@ Implements the classic Kuwahara Filter for a smooth, stylized effect.
 - **Polynomial Anisotropic Kuwahara Filter Imager**  
 Uses a polynomial anisotropic variation to provide greater artistic control. This imager is based on the research presented in the paper: [Anisotropic Kuwahara Filtering with Polynomial Weighting Functions](./docs/Anisotropic_Kuwahara_Filtering_Paper.pdf).
 
-## Examples
+## Requirements
 
-### Maya Demo
+- C++ 17
+- CMake
+- Arnold 7.3
+- OpenCV
+- OpenMP
+
+## Examples
 
 ![Anisotropic Kuwahara Maya Demo](./examples/recording-demo-maya.gif)  
 *Maya Imager Demo, from a simple texture.*
@@ -31,14 +37,6 @@ Uses a polynomial anisotropic variation to provide greater artistic control. Thi
 ![Anisotropic Kuwahara Bunny](./examples/anistropicKuwahara-bunny.jpg)
 
 ![Anisotropic Kuwahara Lion](./examples/anistropicKuwahara-lion.jpg)
-
-## Requirements
-
-- C++ 17
-- CMake
-- Arnold 7.3
-- OpenCV
-- OpenMP
 
 *Only tested on Windows, compiled with MSVC.*
 
