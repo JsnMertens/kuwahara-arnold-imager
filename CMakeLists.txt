@@ -108,7 +108,7 @@ install(
 
 # Install the AE templates for Maya
 install(
-    DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ae/"
+    DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/maya/ae/"
     DESTINATION "${CMAKE_INSTALL_PREFIX}/${MAYA_AE_TEMPLATES_DIR}"
     FILES_MATCHING
         PATTERN "*.py"
