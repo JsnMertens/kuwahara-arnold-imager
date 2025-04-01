@@ -20,7 +20,6 @@ Uses a polynomial anisotropic variation to provide greater artistic control. Thi
 
 ![Anisotropic Kuwahara Lion](./examples/anistropicKuwahara-lion-comparaison.jpg)
 
-
 ## Requirements
 
 - C++ 17
