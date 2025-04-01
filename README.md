@@ -28,24 +28,24 @@ Uses a polynomial anisotropic variation to provide greater artistic control. Thi
 ## Examples
 
 ![Anisotropic Kuwahara Maya Demo](./examples/recording-demo-maya.gif)  
-*Maya Imager Demo, from a simple texture.*
+*Maya Imager Demo, from a simple texture*
 
 ![Anisotropic Kuwahara Dragon Comparaison](./examples/anistropicKuwahara-dragon-comparaisonmesh.jpg)
 
 ![Anisotropic Kuwahara Bunny Comparaison](./examples/anistropicKuwahara-bunny-comparaison.jpg)
 
 ![Anisotropic Kuwahara Lion Comparaison](./examples/anistropicKuwahara-lion-comparaison.jpg)  
-*Lion Photography.*
+*Lion Photography*
 
 ![Anisotropic Kuwahara Dragon](./examples/anistropicKuwahara-dragon.jpg)
 
 ![Anisotropic Kuwahara Bunny](./examples/anistropicKuwahara-bunny-radius10.jpg)
 
 ![Anisotropic Kuwahara Bunny](./examples/anistropicKuwahara-bunny-radius15.jpg)
-*Higher radius example*
+*Higher radius example (R=15)*
 
 ![Anisotropic Kuwahara Lion](./examples/anistropicKuwahara-lion.jpg)
-*Lion Photography.*
+*Lion Photography*
 
 ## License
 
