@@ -18,6 +18,8 @@ Uses a polynomial anisotropic variation to provide greater artistic control. Thi
 
 ![Anisotropic Kuwahara Bunny](./examples/anistropicKuwahara-bunny-comparaison.jpg)
 
+![Anisotropic Kuwahara Lion](./examples/anistropicKuwahara-lion-comparaison.jpg)
+
 
 ## Requirements
 
