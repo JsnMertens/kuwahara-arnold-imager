@@ -12,7 +12,7 @@ Uses a polynomial anisotropic variation to provide greater artistic control. Thi
 
 ## Examples
 
-![Anisotropic Kuwahara Maya Demo](./examples/recording-demo-maya.mp4)
+![Anisotropic Kuwahara Maya Demo](./examples/recording-demo-maya.gif)
 
 ![Anisotropic Kuwahara Dragon](./examples/anistropicKuwahara-dragon-comparaisonmesh.jpg)
 
