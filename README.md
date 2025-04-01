@@ -1,10 +1,43 @@
 # kuwahara-arnold-imager
 
-2 Arnold Imager plugins based on the Kuwahara Filter to achieve a stylized NPR look.
+Set of two Arnold Imager plugins that use the Kuwahara Filter technique to achieve a stylized NPR look.
 
-- Kuwahara Filter Imager (classic Kuwahara)
-- Polynomial Anisotropic Kuwahara Filter Imager
+## Feature
 
-Designed with OpenCV and the Arnold API, multi-threaded using OpenMP, and built with C++ and CMake. Tested on Windows for Arnold 7.3.
+- **Kuwahara Filter Imager (classic Kuwahara)**  
+Implements the classic Kuwahara Filter for a smooth, stylized effect.
 
-The Anisotropic Kuwahara Imager is based on the paper: [Anisotropic Kuwahara Filtering with Polynomial Weighting Functions](./docs/Anisotropic_Kuwahara_Filtering_Paper.pdf)
+- **Polynomial Anisotropic Kuwahara Filter Imager**  
+Uses a polynomial anisotropic variation to provide greater artistic control. This imager is based on the research presented in the paper: [Anisotropic Kuwahara Filtering with Polynomial Weighting Functions](./docs/Anisotropic_Kuwahara_Filtering_Paper.pdf).
+
+## Examples
+
+### Maya Demo
+
+![Anisotropic Kuwahara Maya Demo](./examples/recording-demo-maya.gif)  
+*Maya Imager Demo, from a simple texture.*
+
+![Anisotropic Kuwahara Dragon](./examples/anistropicKuwahara-dragon-comparaisonmesh.jpg)
+
+![Anisotropic Kuwahara Bunny](./examples/anistropicKuwahara-bunny-comparaison.jpg)
+
+![Anisotropic Kuwahara Lion](./examples/anistropicKuwahara-lion-comparaison.jpg)  
+*Lion Photography.*
+
+## Requirements
+
+- C++ 17
+- CMake
+- Arnold 7.3
+- OpenCV
+- OpenMP
+
+*Only tested on Windows, compiled with MSVC.*
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+## Acknowledgements
+
+Research paper: [Anisotropic Kuwahara Filtering with Polynomial Weighting Functions](./docs/Anisotropic_Kuwahara_Filtering_Paper.pdf).
