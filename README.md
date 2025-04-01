@@ -1,5 +1,10 @@
 # kuwahara-arnold-imager
 
+![Static Badge](https://img.shields.io/badge/Arnold-7.3.5-brightgreen?style=flat&logo=autodesk&color=%2342A7CE)
+![Static Badge](https://img.shields.io/badge/Arnold-7.4.1-brightgreen?style=flat&logo=autodesk&color=%2342A7CE)
+
+
+
 Set of two Arnold Imager plugins that use the [Kuwahara Filter](https://en.wikipedia.org/wiki/Kuwahara_filter) to achieve a stylized [NPR](https://en.wikipedia.org/wiki/Non-photorealistic_rendering) look.
 
 ## Feature
@@ -14,7 +19,7 @@ Uses a polynomial anisotropic variation to provide greater artistic control. Thi
 
 - C++ 17
 - CMake 3.21+
-- Arnold 7.3
+- Arnold 7.3.5|7.4.0
 - OpenCV
 - OpenMP
 
@@ -34,9 +39,13 @@ Uses a polynomial anisotropic variation to provide greater artistic control. Thi
 
 ![Anisotropic Kuwahara Dragon](./examples/anistropicKuwahara-dragon.jpg)
 
-![Anisotropic Kuwahara Bunny](./examples/anistropicKuwahara-bunny.jpg)
+![Anisotropic Kuwahara Bunny](./examples/anistropicKuwahara-bunny-radius10.jpg)
+
+![Anisotropic Kuwahara Bunny](./examples/anistropicKuwahara-bunny-radius15.jpg)
+*Higher radius example*
 
 ![Anisotropic Kuwahara Lion](./examples/anistropicKuwahara-lion.jpg)
+*Lion Photography.*
 
 ## License
 

@@ -31,8 +31,13 @@ node_update
 
 imager_prepare
 {
-    // Set the imager schedule type to full frame always as we need access to all neighbouring pixels
-    schedule = AtImagerSchedule::FULL_FRAME;
+// Set the imager schedule type to full frame always as we need access to all neighbouring pixels.
+#if AI_VERSION_MAJOR_NUM  >= 4
+    properties.schedule_full_frame = true;
+    properties.run_once = true;
+#else
+    schedule = AI_IMAGER_SCHEDULE_FULL_FRAME;
+#endif
 }
 
 imager_evaluate
