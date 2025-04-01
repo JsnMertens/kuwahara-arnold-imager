@@ -18,6 +18,8 @@ Uses a polynomial anisotropic variation to provide greater artistic control. Thi
 - OpenCV
 - OpenMP
 
+*Only tested on Windows, compiled with MSVC.*
+
 ## Examples
 
 ![Anisotropic Kuwahara Maya Demo](./examples/recording-demo-maya.gif)  
@@ -35,8 +37,6 @@ Uses a polynomial anisotropic variation to provide greater artistic control. Thi
 ![Anisotropic Kuwahara Bunny](./examples/anistropicKuwahara-bunny.jpg)
 
 ![Anisotropic Kuwahara Lion](./examples/anistropicKuwahara-lion.jpg)
-
-*Only tested on Windows, compiled with MSVC.*
 
 ## License
 
