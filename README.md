@@ -13,7 +13,7 @@ Uses a polynomial anisotropic variation to provide greater artistic control. Thi
 ## Requirements
 
 - C++ 17
-- CMake
+- CMake 3.21+
 - Arnold 7.3
 - OpenCV
 - OpenMP
