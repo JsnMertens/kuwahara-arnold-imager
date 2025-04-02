@@ -27,7 +27,7 @@ Uses a polynomial anisotropic variation to provide greater artistic control. Thi
 
 ## Examples
 
-![Anisotropic Kuwahara Maya Demo](./examples/recording-demo-maya.gif)  
+![Anisotropic Kuwahara Maya Demo](./examples/recording-demo-maya-spiderman.gif)  
 *Maya Imager Demo, from a simple texture*
 
 ![Anisotropic Kuwahara Dragon Comparaison](./examples/anistropicKuwahara-dragon-comparaisonmesh.jpg)
